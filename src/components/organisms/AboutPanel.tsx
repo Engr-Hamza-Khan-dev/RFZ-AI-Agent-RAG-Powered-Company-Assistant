@@ -12,10 +12,10 @@ interface AboutPanelProps {
 }
 
 export const AboutPanel: React.FC<AboutPanelProps> = ({ onClose }) => (
-  <aside className="w-[290px] shrink-0 bg-white border-l border-gray-100 flex flex-col h-full overflow-y-auto">
+  <aside className="w-full xl:w-[290px] shrink-0 bg-card border-l border-border flex flex-col h-full overflow-y-auto">
     {/* Header */}
-    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-      <h2 className="text-base font-semibold text-gray-900">About RFZ digital</h2>
+    <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+      <h2 className="text-base font-semibold text-foreground">About RFZ digital</h2>
       <Button
         variant="ghost"
         size="icon"
@@ -47,7 +47,7 @@ export const AboutPanel: React.FC<AboutPanelProps> = ({ onClose }) => (
       <Separator />
 
       {/* Stats */}
-      <div className="mt-2 divide-y divide-gray-50">
+      <div className="mt-2 divide-y divide-border">
         {companyStats.map((stat) => (
           <StatRow key={stat.label} stat={stat} />
         ))}
@@ -58,8 +58,8 @@ export const AboutPanel: React.FC<AboutPanelProps> = ({ onClose }) => (
 
     {/* What We Do */}
     <div className="px-5 py-5">
-      <h3 className="text-sm font-bold text-gray-900 mb-2">What We Do</h3>
-      <p className="text-xs text-gray-500 leading-relaxed">
+      <h3 className="text-sm font-bold text-foreground mb-2">What We Do</h3>
+      <p className="text-xs text-rfz-muted leading-relaxed">
         We help startups and enterprises build, grow, and scale their online
         presence with end-to-end digital solutions.
       </p>

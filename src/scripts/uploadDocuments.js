@@ -1,11 +1,37 @@
-export interface KnowledgeDocument {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
+#!/usr/bin/env node
+const fs = require('fs');
+const path = require('path');
+const { QdrantClient } = require('@qdrant/js-client-rest');
+const { CohereClientV2 } = require('cohere-ai');
+
+// Load environment variables from .env.local
+const envPath = path.join(__dirname, '../../.env.local');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf-8');
+  envContent.split('\n').forEach((line) => {
+    const [key, value] = line.split('=');
+    if (key && value && !process.env[key.trim()]) {
+      process.env[key.trim()] = value.trim();
+    }
+  });
 }
 
-export const COMPANY_KNOWLEDGE_DOCS: KnowledgeDocument[] = [
+const qdrantUrl = process.env.QDRANT_URL;
+const qdrantApiKey = process.env.QDRANT_API_KEY;
+const cohereApiKey = process.env.COHERE_API_KEY;
+
+if (!qdrantUrl) {
+  console.error('Missing QDRANT_URL environment variable');
+  process.exit(1);
+}
+
+if (!cohereApiKey) {
+  console.error('Missing COHERE_API_KEY environment variable');
+  process.exit(1);
+}
+
+// Company knowledge documents - must match src/data/company.ts
+const COMPANY_KNOWLEDGE_DOCS = [
   {
     id: "overview",
     title: "Company Overview",
@@ -79,21 +105,15 @@ export const COMPANY_KNOWLEDGE_DOCS: KnowledgeDocument[] = [
     tags: ["ppc", "ads", "lead generation"],
   },
   {
-    id: "services-game-development",
-    title: "Game Development",
-    content: "RFZ Digital provides game development services as part of its broader technology solutions.",
-    tags: ["game development", "technology", "innovation"],
-  },
-  {
     id: "technology-tools",
     title: "Technology & Tools",
-    content: "RFZ Digital works with React Native, WordPress, Shopify, Figma, Adobe Photoshop, Adobe Illustrator, social media platforms, and search engines.",
+    content: "RFZ Digital works with React Native, Flutter, WordPress, Shopify, Figma, Adobe Photoshop, Adobe Illustrator, social media platforms, and search engines.",
     tags: ["technology", "tools", "stack"],
   },
   {
     id: "industries-served",
     title: "Industries Served",
-    content: "RFZ Digital supports businesses that need website creation, marketing growth, brand improvement, software solutions, and digital transformation.",
+    content: "RFZ Digital supports businesses that need website creation, marketing growth, brand improvement, mobile apps, software solutions, and digital transformation.",
     tags: ["industries", "business", "digital transformation"],
   },
   {
@@ -105,21 +125,94 @@ export const COMPANY_KNOWLEDGE_DOCS: KnowledgeDocument[] = [
   {
     id: "why-choose",
     title: "Why Choose RFZ Digital",
-    content: "Clients choose RFZ Digital for its experienced digital and technology team, customized solutions, strong communication, modern technology approach, business-focused strategies, and long-term support.",
-    tags: ["competitive advantages", "trust", "quality"],
+    content: "RFZ Digital offers expertise, innovation, proven track record, client-centric approach, quality assurance, timely delivery, and cost-effectiveness. The company has successfully completed 100+ projects for happy clients worldwide.",
+    tags: ["benefits", "expertise", "quality"],
   },
   {
-    id: "contact",
-    title: "Contact Information",
-    content: "Customers can reach RFZ Digital via email at info@rfz.digital or by phone at +44 7488 845749. The company has locations in the United Kingdom, Dubai UAE, and Islamabad Pakistan.",
-    tags: ["contact", "locations", "support"],
-  },
-  {
-    id: "assistant-instructions",
-    title: "AI Assistant Instructions",
-    content: "When answering customer questions, represent RFZ Digital professionally, explain services clearly, focus on business value, ask about project requirements, recommend suitable services, avoid unrealistic promises, and offer to connect customers with RFZ Digital experts.",
-    tags: ["assistant", "instructions", "tone"],
+    id: "portfolio",
+    title: "Portfolio & Projects",
+    content: "RFZ Digital has successfully delivered diverse projects including e-commerce platforms, mobile apps (iOS/Android), SaaS dashboards, enterprise solutions, and digital marketing campaigns. Recent work includes fitness tracking apps, logistics applications, and social commerce platforms.",
+    tags: ["portfolio", "projects", "case studies"],
   },
 ];
 
-export const COMPANY_KNOWLEDGE_PROMPT = `You are RFZ AI, the official virtual assistant for RFZ Digital. Use the RFZ Digital knowledge base documents when answering customer questions. Answer in a professional, friendly, and business-focused tone. Do not hallucinate; if the requested information is unavailable, suggest connecting the user with RFZ Digital experts.`;
+const qdrantClient = new QdrantClient({ url: qdrantUrl, apiKey: qdrantApiKey });
+const cohereClient = new CohereClientV2({ token: cohereApiKey });
+
+async function uploadDocuments() {
+  try {
+    console.log('Starting document upload to Qdrant...');
+    console.log(`Embedding ${COMPANY_KNOWLEDGE_DOCS.length} documents with Cohere...`);
+
+    // Embed all documents
+    const response = await cohereClient.embed({
+      texts: COMPANY_KNOWLEDGE_DOCS.map((doc) => doc.content),
+      model: 'embed-english-v3.0',
+      inputType: 'search_document',
+      embeddingTypes: ['float'],
+    });
+
+    const embeddings = Array.isArray(response.embeddings)
+      ? response.embeddings
+      : response.embeddings.float;
+
+    console.log(`✓ Embedded ${embeddings.length} documents`);
+
+    // Prepare points for Qdrant
+    const points = COMPANY_KNOWLEDGE_DOCS.map((doc, index) => ({
+      id: doc.id.split('-').reduce((acc, part) => acc + part.charCodeAt(0), 0) + index,
+      vector: embeddings[index],
+      payload: {
+        id: doc.id,
+        title: doc.title,
+        content: doc.content,
+        tags: doc.tags,
+      },
+    }));
+
+    // Delete old points from collection if it exists
+    try {
+      const collection = await qdrantClient.getCollection('rfz-knowledge');
+      console.log(`✓ Collection exists with ${collection.points_count} points`);
+      
+      // Clear old points
+      await qdrantClient.deletePointsByFilter('rfz-knowledge', {
+        filter: {
+          must: [
+            {
+              has_id: points.map(p => p.id),
+            },
+          ],
+        },
+      });
+      console.log('Cleared old points');
+    } catch (err) {
+      console.log('Collection does not exist yet, will create it');
+    }
+
+    // Upsert points to Qdrant
+    console.log(`Uploading ${points.length} points to Qdrant...`);
+    await qdrantClient.upsert('rfz-knowledge', {
+      points,
+    });
+
+    console.log('✓ Successfully uploaded all documents to Qdrant!');
+    console.log(`✓ ${points.length} knowledge documents are now indexed and searchable`);
+    console.log('\nUpdated services include:');
+    console.log('  • Website Design & Development');
+    console.log('  • Mobile App Development (iOS/Android/React Native/Flutter)');
+    console.log('  • Software Development');
+    console.log('  • SEO');
+    console.log('  • Digital Marketing');
+    console.log('  • Social Media Management');
+    console.log('  • Graphic Design');
+    console.log('  • Cloud Services');
+    console.log('  • PPC Marketing');
+ 
+  } catch (err) {
+    console.error('Error uploading documents:', err.message || err);
+    process.exitCode = 1;
+  }
+}
+
+uploadDocuments();

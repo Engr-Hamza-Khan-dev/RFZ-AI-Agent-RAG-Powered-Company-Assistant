@@ -42,23 +42,30 @@ export function useChat() {
       setIsLoading(true);
 
       try {
-const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg }),
-      });
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg }),
+        });
 
-      const data = await res.json();
-      const reply = data.reply ?? "Sorry, I couldn't process that.";
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({ error: "Unknown error" }));
+          throw new Error(error.error || `API error: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const reply = data.reply ?? "Sorry, I couldn't process that.";
 
         setMessages((p) => [
           ...p,
           { id: (Date.now() + 1).toString(), role: "assistant", content: reply, timestamp: getTime() },
         ]);
-      } catch {
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again.";
+        console.error("Chat error:", errorMessage);
         setMessages((p) => [
           ...p,
-          { id: (Date.now() + 1).toString(), role: "assistant", content: "Something went wrong. Please try again.", timestamp: getTime() },
+          { id: (Date.now() + 1).toString(), role: "assistant", content: errorMessage, timestamp: getTime() },
         ]);
       } finally {
         setIsLoading(false);

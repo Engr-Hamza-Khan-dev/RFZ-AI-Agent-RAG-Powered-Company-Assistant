@@ -30,7 +30,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="border-t border-gray-100 bg-white px-8 py-4">
+    <div className="border-t border-gray-100 bg-white px-4 sm:px-8 py-4">
       {/* Suggested questions scroll row */}
       <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
         {suggestedQuestions.map((q) => (

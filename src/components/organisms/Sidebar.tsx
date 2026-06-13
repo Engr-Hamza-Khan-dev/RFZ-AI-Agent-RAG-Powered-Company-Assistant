@@ -11,16 +11,17 @@ import { Icon } from "@/components/atoms";
 interface SidebarProps {
   activeNav: string;
   onNavChange: (id: string) => void;
+  className?: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange, className = "" }) => {
   const items = navItems.map((item) => ({
     ...item,
     active: item.id === activeNav,
   }));
 
   return (
-    <aside className="w-[230px] shrink-0 bg-white border-r border-gray-100 flex flex-col h-full">
+    <aside className={`${className} w-[230px] shrink-0 bg-white border-r border-gray-100 flex flex-col h-full`}>
       {/* Logo */}
       <div className="px-4 py-5 border-b border-gray-100">
         <Logo />

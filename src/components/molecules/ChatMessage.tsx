@@ -22,8 +22,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           className={cn(
             "px-4 py-3 rounded-2xl text-sm leading-relaxed",
             isUser
-              ? "bg-purple-600 text-white rounded-tr-sm"
-              : "bg-white border border-gray-100 shadow-sm text-gray-800 rounded-tl-sm"
+              ? "bg-rfz-primary text-white rounded-tr-sm"
+                : "bg-card border border-border shadow-sm text-foreground rounded-tl-sm"
           )}
         >
           {isUser ? (
@@ -32,11 +32,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             <ReactMarkdown
               components={{
                 p:    ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                strong:({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                strong:({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
                 ul:   ({ children }) => <ul className="mt-2 space-y-1">{children}</ul>,
                 li:   ({ children }) => (
                   <li className="flex items-start gap-2">
-                    <span className="mt-1.5 w-4 h-4 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                    <span className="mt-1.5 w-4 h-4 rounded-full bg-rfz-primary flex items-center justify-center shrink-0">
                       <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
                         <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>

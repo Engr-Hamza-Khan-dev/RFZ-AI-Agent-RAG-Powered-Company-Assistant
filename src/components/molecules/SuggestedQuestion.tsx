@@ -14,7 +14,7 @@ export const SuggestedQuestion: React.FC<SuggestedQuestionProps> = ({ question, 
     variant="outline"
     size="sm"
     onClick={() => onClick(question.text)}
-    className="shrink-0 h-9 px-4 rounded-full border-gray-200 text-gray-600 text-xs font-medium hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-colors whitespace-nowrap"
+    className="shrink-0 h-9 px-4 rounded-full border-rfz text-rfz-muted text-xs font-medium hover:border-rfz hover:text-rfz-primary hover:bg-muted transition-colors whitespace-nowrap"
   >
     {question.text}
   </Button>

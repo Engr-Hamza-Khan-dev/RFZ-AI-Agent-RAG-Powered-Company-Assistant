@@ -13,7 +13,7 @@ export const navItems: NavItemType[] = [
 
 export const companyStats: CompanyStat[] = [
   { iconKey: "calendar", label: "Founded",       value: "2020" },
-  { iconKey: "mapPin",   label: "Headquarters",  value: "India" },
+  { iconKey: "mapPin",   label: "Headquarters",  value: "Pakistan" },
   { iconKey: "users",    label: "Team Size",      value: "25+ Professionals" },
   { iconKey: "smile",    label: "Clients",        value: "100+ Happy Clients" },
   { iconKey: "globe",    label: "Website",        value: "www.rfzdigital.com", isLink: true },
@@ -33,11 +33,12 @@ RFZ Digital helps businesses grow through digital and technology solutions in th
 We deliver business value through:
 
 - **Website Design & Development**
+- **Mobile App Development** (iOS, Android, Cross-platform)
+- **Software Development**
 - **Search Engine Optimization (SEO)**
 - **Digital Marketing**
 - **Social Media Management**
 - **Graphic Design**
-- **Software Development**
 - **Cloud Services**
 - **PPC Marketing**
 - **Game Development**

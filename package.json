@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:upload": "node src/scripts/uploadDocuments.js"
   },
   "dependencies": {
     "@langchain/ollama": "^1.2.7",
