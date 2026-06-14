@@ -17,14 +17,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing message." }, { status: 400 });
   }
   if (!process.env.GROQ_API_KEY) {
-    return NextResponse.json({ error: "Missing Groq API key." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Missing Groq API key." },
+      { status: 500 },
+    );
   }
 
   const vectorStore = await getVectorStore();
   const results = await vectorStore.similaritySearch(question, 3);
 
   const context = results.length
-    ? results.map((item: any, index: number) => `Source ${index + 1}: ${item.content}`).join("\n\n")
+    ? results
+        .map(
+          (item: any, index: number) => `Source ${index + 1}: ${item.content}`,
+        )
+        .join("\n\n")
     : "";
 
   const systemContent = `${COMPANY_KNOWLEDGE_PROMPT}
